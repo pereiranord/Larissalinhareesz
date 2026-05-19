@@ -3,6 +3,7 @@ import { getPerfil, getDiario, getImageUrl } from '@/lib/airtable';
 import Nav from '@/components/Nav';
 import Footer from '@/components/Footer';
 import Placeholder from '@/components/Placeholder';
+import NewsletterForm from '@/components/NewsletterForm';
 import { Clock } from 'lucide-react';
 
 export const revalidate = 60;
@@ -102,14 +103,18 @@ export default async function Diario() {
           </div>
         )}
 
-        {/* CTA newsletter (placeholder MVP) */}
-        <div className="mt-16 bg-bege-fundo border border-bege rounded-3xl p-8 text-center">
-          <h3 className="font-serif text-xl font-bold text-marrom">
-            Quer receber por email?
-          </h3>
-          <p className="text-sm text-marrom/60 mt-2">
-            Em breve você vai poder assinar e receber meus posts direto na sua caixa de entrada. 🤍
-          </p>
+        {/* Newsletter funcional */}
+        <div className="mt-16 relative bg-gradient-to-br from-marrom to-marrom-escuro rounded-3xl p-10 text-center overflow-hidden">
+          <div className="absolute -top-10 -right-10 w-32 h-32 rounded-full bg-dourado/10 anim-float" />
+          <div className="relative z-10">
+            <h3 className="font-serif text-2xl font-bold text-creme">
+              Recebe o próximo direto no email
+            </h3>
+            <p className="text-sm text-creme/70 mt-2 mb-6">
+              Sem spam. Só coisa boa, quando eu postar algo novo. 🤍
+            </p>
+            <NewsletterForm variant="dark" />
+          </div>
         </div>
       </div>
 
