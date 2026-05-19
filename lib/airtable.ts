@@ -21,6 +21,7 @@ export const TABLES = {
   CUPONS: 'tblfAcitBaJqwi4Rw',
   LEADS: 'tblkoh9yc3RGxiAdA',
   METRICAS: 'tblVxDelQJ0XglOIV',
+  ASSINANTES: 'tblqL0rUiwQs6Laib',
 } as const;
 
 type AirtableRecord = {
@@ -224,4 +225,72 @@ export async function criarLead(dados: Record<string, any>) {
     console.error('Erro ao criar lead:', err);
     return { ok: false, error: 'Erro de conexão' };
   }
+}
+
+// =====================================================
+// NEWSLETTER (Assinantes)
+// =====================================================
+
+export async function buscarAssinantePorEmail(email: string) {
+  const recs = await fetchTable(TABLES.ASSINANTES, {
+    filterByFormula: `LOWER({Email})='${email.toLowerCase().replace(/'/g, "")}'`,
+    maxRecords: 1,
+  });
+  return recs[0] ? { id: recs[0].id, ...recs[0].fields } : null;
+}
+
+export async function criarAssinante(dados: Record<string, any>) {
+  if (!TOKEN) return { ok: false, error: 'Token não configurado' };
+  try {
+    const res = await fetch(`${API}/${BASE_ID}/${TABLES.ASSINANTES}`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${TOKEN}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ records: [{ fields: dados }], typecast: true }),
+    });
+    if (!res.ok) {
+      console.error('Erro ao criar assinante:', await res.text());
+      return { ok: false, error: 'Erro ao salvar' };
+    }
+    const data = await res.json();
+    return { ok: true, id: data.records?.[0]?.id };
+  } catch (err) {
+    console.error('Erro ao criar assinante:', err);
+    return { ok: false, error: 'Erro de conexão' };
+  }
+}
+
+export async function atualizarAssinante(id: string, dados: Record<string, any>) {
+  if (!TOKEN) return { ok: false };
+  try {
+    const res = await fetch(`${API}/${BASE_ID}/${TABLES.ASSINANTES}/${id}`, {
+      method: 'PATCH',
+      headers: {
+        Authorization: `Bearer ${TOKEN}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ fields: dados, typecast: true }),
+    });
+    return { ok: res.ok };
+  } catch (err) {
+    console.error('Erro ao atualizar assinante:', err);
+    return { ok: false };
+  }
+}
+
+export async function confirmarAssinantePorToken(token: string) {
+  const recs = await fetchTable(TABLES.ASSINANTES, {
+    filterByFormula: `{Token Confirmação}='${token.replace(/'/g, "")}'`,
+    maxRecords: 1,
+  });
+  if (!recs[0]) return { ok: false, error: 'Token inválido' };
+  const r = await atualizarAssinante(recs[0].id, {
+    'Status': '✅ Confirmado',
+    'Data Confirmação': new Date().toISOString(),
+  });
+  return r.ok
+    ? { ok: true, nome: recs[0].fields['Nome'] || '' }
+    : { ok: false, error: 'Erro ao confirmar' };
 }
